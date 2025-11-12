@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useRef } from 'react'
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import Spline from '@splinetool/react-spline'
 
 function Nav() {
@@ -47,6 +47,7 @@ function Hero() {
   return (
     <section id="home" className="relative min-h-[90vh] md:min-h-screen overflow-hidden flex items-center">
       <div className="absolute inset-0 bg-[radial-gradient(80%_60%_at_50%_0%,rgba(0,0,0,0.05)_0%,rgba(255,255,255,0)_60%)] pointer-events-none" />
+      <div className="pointer-events-none absolute -inset-x-40 -top-40 h-[32rem] bg-gradient-to-b from-sky-100 via-transparent to-transparent blur-3xl opacity-70" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-8 items-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="py-24 md:py-0">
           <p className="uppercase tracking-[0.25em] text-xs text-black/50 mb-4">Content Creator</p>
@@ -73,16 +74,97 @@ function Hero() {
   )
 }
 
+function TiltCard({ project, index }) {
+  const ref = useRef(null)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const rx = useSpring(useTransform(y, [0, 1], [10, -10]), { stiffness: 200, damping: 20 })
+  const ry = useSpring(useTransform(x, [0, 1], [-10, 10]), { stiffness: 200, damping: 20 })
+  const scale = useSpring(1, { stiffness: 200, damping: 20 })
+
+  function handleMouse(e) {
+    const rect = ref.current?.getBoundingClientRect()
+    if (!rect) return
+    const px = (e.clientX - rect.left) / rect.width
+    const py = (e.clientY - rect.top) / rect.height
+    x.set(px)
+    y.set(py)
+  }
+  function handleEnter() {
+    scale.set(1.02)
+  }
+  function handleLeave() {
+    x.set(0.5)
+    y.set(0.5)
+    scale.set(1)
+  }
+
+  return (
+    <motion.a
+      href="#contact"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.5, delay: index * 0.06 }}
+      className="group block [perspective:1000px]"
+    >
+      <motion.div
+        ref={ref}
+        onMouseMove={handleMouse}
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
+        style={{ rotateX: rx, rotateY: ry, scale }}
+        className="rounded-2xl overflow-hidden border border-black/10 bg-white/60 backdrop-blur-xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.2)] transition-shadow transform-gpu"
+      >
+        <div className="relative aspect-[16/10] w-full overflow-hidden">
+          <img src={project.image} alt={project.title} className="absolute inset-0 w-full h-full object-cover will-change-transform" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-black/10 via-transparent to-white/20 mix-blend-overlay" />
+          <div className="absolute -inset-0.5 bg-[radial-gradient(40%_60%_at_70%_10%,rgba(255,255,255,0.6),transparent_60%)] opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
+        </div>
+        <div className="p-4 flex items-center justify-between">
+          <div>
+            <p className="font-semibold">{project.title}</p>
+            <p className="text-xs uppercase tracking-widest text-black/50">{project.tag}</p>
+          </div>
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full border border-black/10 group-hover:bg-black group-hover:text-white transition-colors">View</span>
+        </div>
+      </motion.div>
+    </motion.a>
+  )
+}
+
 function Work() {
   const projects = [
     {
       title: 'Neon Flow',
       tag: 'Motion Edit',
-      cover: 'linear-gradient(135deg,#0ea5e9,#22d3ee)',
+      image: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=1600&auto=format&fit=crop',
     },
-    { title: 'Clean Frame', tag: 'Short Reel', cover: 'linear-gradient(135deg,#a78bfa,#60a5fa)' },
-    { title: 'Future Grid', tag: 'Visual Pack', cover: 'linear-gradient(135deg,#f472b6,#f59e0b)' },
-    { title: 'Mono Pulse', tag: 'Brand Tease', cover: 'linear-gradient(135deg,#34d399,#10b981)' },
+    {
+      title: 'Clean Frame',
+      tag: 'Short Reel',
+      image: 'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1600&auto=format&fit=crop',
+    },
+    {
+      title: 'Future Grid',
+      tag: 'Visual Pack',
+      image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1600&auto=format&fit=crop',
+    },
+    {
+      title: 'Mono Pulse',
+      tag: 'Brand Tease',
+      image: 'https://images.unsplash.com/photo-1492724441997-5dc865305da7?q=80&w=1600&auto=format&fit=crop',
+    },
+    {
+      title: 'Glass Shapes',
+      tag: '3D Render',
+      image: 'https://images.unsplash.com/photo-1542751110-97427bbecf20?q=80&w=1600&auto=format&fit=crop',
+    },
+    {
+      title: 'Vapor Trails',
+      tag: 'Title Pack',
+      image: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=1600&auto=format&fit=crop',
+    },
   ]
 
   return (
@@ -95,27 +177,7 @@ function Work() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((p, i) => (
-            <motion.a
-              key={p.title}
-              href="#contact"
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.5, delay: i * 0.06 }}
-              className="group block rounded-2xl overflow-hidden border border-black/10 bg-white/60 backdrop-blur-xl hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.2)] transition-shadow"
-            >
-              <div
-                className="aspect-[16/10] w-full"
-                style={{ backgroundImage: p.cover, backgroundSize: 'cover', backgroundPosition: 'center' }}
-              />
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">{p.title}</p>
-                  <p className="text-xs uppercase tracking-widest text-black/50">{p.tag}</p>
-                </div>
-                <span className="text-xs font-medium px-2.5 py-1 rounded-full border border-black/10">Play</span>
-              </div>
-            </motion.a>
+            <TiltCard key={p.title} project={p} index={i} />
           ))}
         </div>
       </div>
